@@ -1,0 +1,13 @@
+{
+  "name": "shortcuts",
+  "directories": "A bound shortcut key file",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "keywords": [
+    "shortcuts"
+  ],
+  "author": "Funny002 <dsufunny@gmail.com>",
+  "license": "MIT"
+}
