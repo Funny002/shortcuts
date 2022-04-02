@@ -1,11 +1,15 @@
 'use script';
+
 const keyArr = ['altKey', 'ctrlKey', 'metaKey', 'shiftKey'];
 
 const keys = { BACKSPACE: 8, TAB: 9, ENTER: 13, ESCAPE: 27, LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, DELETE: 46 };
 
 const getType = target => Object.prototype.toString.call(target).slice(8, -1).toLocaleLowerCase();
 
-const reObjectArr = (target, list) => list.reduce((value, keys) => (value[keys] = target[keys], value), {});
+const reObjectArr = (target, list) => list.reduce((value, keys) => {
+  if (target[keys] !== undefined) value[keys] = target[keys];
+  return value;
+}, {});
 
 function handlerKeys (binding) {
   let types = getType(binding);
@@ -28,8 +32,10 @@ function handlerKeys (binding) {
   return { ...binding };
 }
 
-const Shortcuts = (container, options) => {
-  if (this instanceof Shortcuts) {
+export const Keyboard = keys;
+
+export const Shortcuts = function(container, options) {
+  if (!(this instanceof Shortcuts)) {
     return new Shortcuts(container, options);
   }
 
@@ -37,42 +43,45 @@ const Shortcuts = (container, options) => {
 
   const root = container || document.body;
 
-  const getBindings = binding => {
+  const getBindings = (binding, create = false) => {
     let target = bindings;
     for (const k of keyArr) {
       if (binding[k]) {
-        if (!target[k]) target[k] = {};
+        if (!target[k]) {
+          if (!create) return [];
+          target[k] = {};
+        }
         target = target[k];
       }
     }
-    return target;
+    if (!target[binding['key']] && create) target[binding['key']] = [];
+    return target[binding['key']] || [];
   };
 
-  const handlerListen = event => {
-    const obj = reObjectArr(event, ['which', 'code'].concat(keyArr));
-    console.log(obj, event);
+  const handlerStart = event => {
+    const keys = reObjectArr(event, keyArr);
+    keys.key = event.which || event.keyCode;
+    getBindings(keys).forEach(({ handler, key }) => handler(key));
   };
 
-  const uninstall = () => {
-    root.removeEventListener('keydown', handlerListen);
+  const quit = () => {
+    root.removeEventListener('keydown', handlerStart);
   };
 
-  const handlerUninstall = () => {
+  const handlerQuit = () => {
     const remove = root.remove;
     root.remove = () => {
-      uninstall();
+      quit();
       remove();
     };
   };
 
-  handlerUninstall();
+  handlerQuit();
 
   const addBinding = (keys, handler) => {
     keys = handlerKeys(keys);
     if (!keys && handler) return false;
-    const bindings = getBindings(keys);
-    if (!bindings[keys['key']]) bindings[keys['key']] = [];
-    bindings[keys['key']].push({ key: keys, handler });
+    getBindings(keys, true).push({ key: keys, handler });
   };
 
   const handlerBindings = bindings => {
@@ -83,11 +92,13 @@ const Shortcuts = (container, options) => {
 
   options && handlerBindings(options);
 
-  const listen = () => {
-    root.addEventListener('keydown', handlerListen);
+  const start = () => {
+    root.addEventListener('keydown', handlerStart);
   };
 
-  listen();
+  start();
 
-  return { addBinding, uninstall, listen, bindings };
+  return { addBinding, quit, start, bindings };
 };
+
+export default Shortcuts;
