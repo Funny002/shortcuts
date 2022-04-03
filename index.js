@@ -59,9 +59,11 @@ export const Shortcuts = function(container, options) {
   };
 
   const handlerStart = event => {
-    const keys = reObjectArr(event, keyArr);
-    keys.key = event.which || event.keyCode;
-    getBindings(keys).forEach(({ handler, key }) => handler(key));
+    const bindings = getBindings({ key: event.which || event.keyCode, ...reObjectArr(event, keyArr) });
+    bindings.forEach(({ handler, key }) => handler(key));
+    if (bindings.length) {
+      event.preventDefault();
+    }
   };
 
   const quit = () => {
