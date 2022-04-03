@@ -6,7 +6,7 @@ export interface ShortcutsKey {
   shiftKey?: boolean;
 }
 
-export type ShortcutsHandler = (key: ShortcutsKey) => void
+export type ShortcutsHandler = (key?: ShortcutsKey) => void
 
 interface Binding {
   key: ShortcutsKey;
